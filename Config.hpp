@@ -65,12 +65,19 @@
 
 
 // Motors Speed and acceleration bounded
-// TO DO : compute real values for these physical limitations (see doc motors or use 3/2g bounding?)
-// #Motors1
-#define MAX_MOTOR_SPEED 1.
-#define MAX_MOTOR_ACCELERATION 1.
+// Computed using physical limitations
+// MAX_MOTOR_SPEED : total acceleration inferior to g/2
+// MAX_MOTOR_ACCELERATION : no more than 10% of MAX_MOTOR_SPEED can change during min_time_rate
+// Last update : #Motors2
+#define MAX_MOTOR_SPEED 368.44 // given in rd/s
+#define MAX_MOTOR_ACCELERATION 7369. // given in rd/s^2
 
+// Servo port to control motors via ESC
+#define SERVO_PORT "/dev/servoblaster"
 
+// Times, in microseconds, to control PWM signals
+#define SERVO_VAL_MIN 1000.
+#define SERVO_VAL_MAX 2000.
 
 
 

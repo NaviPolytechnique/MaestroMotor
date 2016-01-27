@@ -30,15 +30,14 @@
 
 
 
-#define SERVO_PORT "/dev/servoblaster"
-
 
 // TODO : calculate from command
 //      : safety checks on motors
 //      : write on port
-//      : define time_rate
 //      : STOP ALL (forever)
 //      : define SERVO_CALIB (first input given to the ports to show motors is started + calib ?)
+// COMMENT : at the moment, checkSpeed returns the speed (saturated if necessary)
+//         : declaration of #define SERVO_PORT is now in Config.hpp
 
 class MaestroMotor {
     
@@ -79,35 +78,65 @@ public:
     
     
     /**
-     * \brief Check that motor Speed is adequate
+     * \brief Check that motor Speed is adequate and returns its value or saturation values
      *
      * Check it is superior to 0 and inferior to saturation. Throws Motor_Exception if not.
      *
-     * \param Eigen::Vector4f : Commands from Autopilot, SERVO_ID servo number
+     * \param Eigen::Vector4f : Commands from Autopilot, computed new motor speed
      */
-    void _checkSpeed(Eigen::Vector4f&, SERVO_ID) throw(Motor_Exception);
+    float checkSpeed(Eigen::Vector4f&, float) throw(Motor_Exception);
     
+    
+    /**
+     * \brief Check that motor Acceleration is adequate
+     *
+     * Check it is inferior to saturation. Throw Motor_Exception if not. Returns the saturated speed if necessary
+     *
+     * \param Eigen::Vector4f : Commands from Autopilot, SERVO_ID of which we check the acceleration, float computed new motor speed
+     */
+    // COMMENT : SERVO_ID needed to compute acceleration from previous speed in _servo_out
+    float checkAcceleration(Eigen::Vector4f&, SERVO_ID, float) throw(Motor_Exception);
+
     
     /**
      * \brief Check that motor Acceleration is adequate
      *
      * Check it is inferior to saturation. Throw Motor_Exception if not.
      *
-     * \param Eigen::Vector4f : Commands from Autopilot, SERVO_ID servo number
+     * \param Eigen::Vector4f : Commands from Autopilot, SERVO_ID which we pre-compute the speed
      */
-    void _checkAcceleration(Eigen::Vector4f&, SERVO_ID) throw(Motor_Exception);
-
+    float preCalcMotorSpeed(Eigen::Vector4f&, SERVO_ID);
+    
     
     
     /**
-     * \brief Calculate motors speed from commands
+     * \brief Update _motor_speed
      *
      * Calculate motors speed from commands and store them into _servo_out
      * 
      * \param Eigen::Vector4f : Commands from Autopilot
      */
-    void update(Eigen::Vector4f&);
+    void _update_motor_speed(Eigen::Vector4f&);
     
+    
+    /**
+     * \brief Update _servo_out
+     *
+     * Calculate PWM signals from commands and store them into _servo_out
+     *
+     * \param
+     */
+    void _update_servo_out();
+    
+    
+    /**
+     * \brief Update _motor_speed, then _servo_out
+     *
+     * Calculate motors speed from commands and store them into _servo_out
+     *
+     * \param Eigen::Vector4f : Commands from Autopilot
+     */
+    void _update(Eigen::Vector4f&);
     
     
     /**
@@ -115,9 +144,10 @@ public:
      *
      * Transform _servo_out to string and write on port
      *
-     * \return 1 if succeeded, 0 if not
+     * \return 1 if succeeded, 0 if not then throw serial_exception
      */
-    int setPosition();
+    int setPosition() throw(serial_exception);
+    
     
     
 
@@ -125,14 +155,13 @@ private:
     
     Serial _servo_port; //defined from CONFIG
     
+    int _servo_id[4]; // TO DO : see w/ Louis if this table is useful (repetition of the ENUM or not?)
     
-    int _servo_id[4];
+    Eigen::Vector4f _motor_speed; //motor speeds given in rd.s
+
+    uint16_t _servo_out[4]; //PWM signals sent to ESC given in microseconds
     
-    
-    uint16_t _servo_out[4];
-    
-    
-    uint8_t _time_rate;
+    uint8_t _time_rate; //time rate
 
     
     
