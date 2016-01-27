@@ -200,7 +200,7 @@ public:
     /** ------------------------------------------------------------------------------------------------
      * Flush the serial port
      **/
-    //TO DO : write this function (?) or add a .flush() in write_string
+    //TO DO : check the second argument in the tcflush is correct
     void flush();
     
     //-------------------------------------------------------------------------------------------------//

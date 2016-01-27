@@ -27,6 +27,7 @@
 #include "Config.hpp"
 #include "/usr/local/include/Dense"
 #include <string>
+#include "navi_State.hpp"
 
 
 
@@ -149,6 +150,14 @@ public:
     void setPosition() throw(Motor_Exception);
     
     
+    /**
+     * \brief Run the motors w/ checks
+     *
+     *
+     *
+     * \return 
+     */
+    void run() throw(Motor_Exception);
     
 
 private:

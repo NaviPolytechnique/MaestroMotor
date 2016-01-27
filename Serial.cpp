@@ -194,14 +194,9 @@ int Serial::readString(char *String,char FinalChar,unsigned int MaxNbBytes)
 }
 
 
-
-/*
-void flush(){
-    
-    file.fflush();
-    
-    
-}*/
+void Serial::flush(){
+    tcflush(file,TCIOFLUSH);
+}
 
 
 

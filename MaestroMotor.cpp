@@ -152,42 +152,31 @@ void MaestroMotor::setPosition() throw(Motor_Exception){
         
         // Counting the number of ports on which we manage to write
         int number_of_updated_ports = 0;
-        
-            // For each motor :
-            // Writes the string "servo_id=_servo_outus/n" in serial_port
-            // Increments number_of_updated_ports
-            // Updating Motor port 1
-            const char* preCalcPWM1 = (new std::string(std::to_string(servo_1_id)+"="+std::to_string(_servo_out[0])+"us/n"))->c_str();
-            number_of_updated_ports+=_servo_port.writeString(preCalcPWM1);
-            // Add flush -> see TODO in Serial.cpp
-        
-            // Updating Motor port 2
-            const char* preCalcPWM2 = (new std::string(std::to_string(servo_2_id)+"="+std::to_string(_servo_out[1])+"us/n"))->c_str();
-            number_of_updated_ports+=_servo_port.writeString(preCalcPWM2);
-        
-            // Updating Motor port 2
-            const char* preCalcPWM3 = (new std::string(std::to_string(servo_3_id)+"="+std::to_string(_servo_out[2])+"us/n"))->c_str();
-            number_of_updated_ports+=_servo_port.writeString(preCalcPWM3);
-        
-            // Updating Motor port 2
-            const char* preCalcPWM4 = (new std::string(std::to_string(servo_4_id)+"="+std::to_string(_servo_out[3])+"us/n"))->c_str();
-            number_of_updated_ports+=_servo_port.writeString(preCalcPWM4);
-        
+        const char* preCalcPWM;
+
+        // For each motor :
+        // Writes the string "servo_id=_servo_outus/n" in serial_port
+        // Increments number_of_updated_ports
+
+        for (int i=0; i<4 ; i++){
+            preCalcPWM = (new std::string(std::to_string(_servo_id[i])+"="+std::to_string(_servo_out[0])+"us/n"))->c_str();
+            _servo_port.flush();  // TODO : figure out if it is necessary to flush
+            number_of_updated_ports+=_servo_port.writeString(preCalcPWM);
+        }
+
         if (number_of_updated_ports/4<1) {
             throw Motor_Exception(Motor_Exception::other,"Couldn't write on ALL ports",2);
         }
     }
 }
 
-
-
-
-/*
- run(){
-    _update();
+//TODO : connect it w/ Drone class
+void MaestroMotor::run() throw(Motor_Exception){
+//    _update_motor_speed(Drone.getCommand());
+    _update_servo_out();
     setPosition();
  }
- */
+ 
 
 
 
