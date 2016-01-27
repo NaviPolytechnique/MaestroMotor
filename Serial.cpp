@@ -195,10 +195,13 @@ int Serial::readString(char *String,char FinalChar,unsigned int MaxNbBytes)
 
 
 
-
-void Flush(){
+/*
+void flush(){
     
-}
+    file.fflush();
+    
+    
+}*/
 
 
 

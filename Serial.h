@@ -201,7 +201,7 @@ public:
      * Flush the serial port
      **/
     //TO DO : write this function (?) or add a .flush() in write_string
-    void Flush();
+    void flush();
     
     //-------------------------------------------------------------------------------------------------//
 

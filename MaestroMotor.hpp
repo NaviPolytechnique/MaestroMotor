@@ -43,7 +43,7 @@ class MaestroMotor {
     
     
     /**
-     * \enum SERVO_PORT
+     * \enum SERVO_ID
      * \brief Enumerates the 4 servo to ease control
      */
     enum SERVO_ID{
@@ -74,7 +74,7 @@ public:
      *
      * \return 1 if port open, 0 if not (then throw Motor_Exception)
      */
-    int _init() throw(Motor_Exception);
+    void _init() throw(Motor_Exception);
     
     
     /**
@@ -82,9 +82,9 @@ public:
      *
      * Check it is superior to 0 and inferior to saturation. Throws Motor_Exception if not.
      *
-     * \param Eigen::Vector4f : Commands from Autopilot, computed new motor speed
+     * \param float : Computed motor speed 
      */
-    float checkSpeed(Eigen::Vector4f&, float) throw(Motor_Exception);
+    void checkSpeed(float&) throw(Motor_Exception);
     
     
     /**
@@ -95,7 +95,7 @@ public:
      * \param Eigen::Vector4f : Commands from Autopilot, SERVO_ID of which we check the acceleration, float computed new motor speed
      */
     // COMMENT : SERVO_ID needed to compute acceleration from previous speed in _servo_out
-    float checkAcceleration(Eigen::Vector4f&, SERVO_ID, float) throw(Motor_Exception);
+    void checkAcceleration(SERVO_ID, float&) throw(Motor_Exception);
 
     
     /**
@@ -103,9 +103,9 @@ public:
      *
      * Check it is inferior to saturation. Throw Motor_Exception if not.
      *
-     * \param Eigen::Vector4f : Commands from Autopilot, SERVO_ID which we pre-compute the speed
+     * \param Eigen::Vector4f : Commands from Autopilot, SERVO_ID : which we pre-compute the speed
      */
-    float preCalcMotorSpeed(Eigen::Vector4f&, SERVO_ID);
+    float preCalcMotorSquareSpeed(Eigen::Vector4f&, SERVO_ID);
     
     
     
@@ -146,7 +146,7 @@ public:
      *
      * \return 1 if succeeded, 0 if not then throw serial_exception
      */
-    int setPosition() throw(serial_exception);
+    void setPosition() throw(Motor_Exception);
     
     
     
@@ -155,7 +155,7 @@ private:
     
     Serial _servo_port; //defined from CONFIG
     
-    int _servo_id[4]; // TO DO : see w/ Louis if this table is useful (repetition of the ENUM or not?)
+    SERVO_ID _servo_id[4]; //
     
     Eigen::Vector4f _motor_speed; //motor speeds given in rd.s
 

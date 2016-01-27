@@ -21,115 +21,106 @@
 
 
 MaestroMotor::MaestroMotor(uint8_t time_rate) : _time_rate(time_rate), _servo_port(SERVO_PORT,9600){
-    
-    
-    // TODO : check what sould the baudrate be !
-    
-
-}
-
-// Last update :
-// #Motors2
-int MaestroMotor::_init() throw(Motor_Exception){
-    
-    if(_servo_port.isOpen()){
-        Eigen::Vector4f command = *new Eigen::Vector4f;
-        command<<0,0,0,0;
-        
-        //Setting _servo_out to 1ms and _motor_speeds to zero
-        _update(command);
-                
-        return 1;
-    }
-    else {
-        throw new serial_exception(1,"Failed to open Motor port",0);
-        return 0;
-    }
 }
 
 
-// Last update :
-// #Motors2
-float MaestroMotor::checkSpeed(Eigen::Vector4f& command, float new_speed) throw(Motor_Exception){
+void MaestroMotor::_init() throw(Motor_Exception){
+    // #addlouis
+    //Checks the port is currently open
+    if (!_servo_port.isOpen()) throw Motor_Exception(Motor_Exception::other,"Could'nt open servo port",1);
+
+    // #addlouis
+    // Sets the servo id
+    _servo_id[0] = servo_1_id;
+    _servo_id[1] = servo_2_id;
+    _servo_id[2] = servo_3_id;
+    _servo_id[3] = servo_4_id;
+    
+    // #modiflouis
+    // Writes first commands
+    Eigen::Vector4f command;
+    command.setZero();
+    //Setting _servo_out to 1ms and _motor_speeds to zero
+    _update(command);
+    // TODO : write on servo corresponding PWM to show init is good
+}
+
+
+
+//#louismodif : tu n'utilisais pas le vecteur de commande, qui n'a rien à voir avec ce qu'il y a ici
+void MaestroMotor::checkSpeed(float& square_speed) throw(Motor_Exception){
     
     // TODO : check w/ Louis that the "return 0" instruction is read (that we can only print that there is an exception)
-    if(new_speed<0){
+    // #answer : Non, il ne sera jamais lu s'il une exception est lancé donc le return sera aléatoire ..
+    
+    //#louismodif : Comme ça c'est mieux
+    if(square_speed<0){
+        square_speed = 0;
         throw new Motor_Exception(Motor_Exception::speed_saturation, "Error : below 0 speed",1);
-        return 0;
     }
     
-    // TODO : check w/ Louis that the "return MAX_MOTOR_SPEED" instruction is read (that we can only print that there is an exception)
-    if(sqrt(new_speed)>MAX_MOTOR_SPEED){
+    if(sqrt(square_speed)>MAX_MOTOR_SPEED){
+        square_speed = MAX_MOTOR_SPEED*MAX_MOTOR_SPEED;
         throw new Motor_Exception(Motor_Exception::speed_saturation, "Error : superior to saturation speed",1);
-        return MAX_MOTOR_SPEED;
     }
-    
-    return sqrt(new_speed);
-    
 }
 
-// Last update :
-// #Motors2
-float MaestroMotor::checkAcceleration(Eigen::Vector4f& command, SERVO_ID servo, float new_speed) throw(Motor_Exception){
 
-    float preCalcMotorAcceleration=(new_speed-_motor_speed[servo])/_time_rate*1000.;
+
+// #louismodif : pas besoin de la commande ici
+void MaestroMotor::checkAcceleration(SERVO_ID servo, float& speed) throw(Motor_Exception){
+    
+    // #louiscomment : attention convention de nommage en c++
+    float preCalcMotorAcceleration=(speed-_motor_speed[servo])/_time_rate*1000.;
     
     if(preCalcMotorAcceleration>MAX_MOTOR_ACCELERATION){
+        speed =  MAX_MOTOR_ACCELERATION*_time_rate+_motor_speed[servo]; // #louiswarning : manque /1000. non ?
         throw new Motor_Exception(Motor_Exception::acceleration_saturation, "Error : acceleration superior to saturation",1);
-        return MAX_MOTOR_ACCELERATION*_time_rate+_motor_speed[servo];
     }
     
     if(preCalcMotorAcceleration<-MAX_MOTOR_ACCELERATION){
+        speed = -MAX_MOTOR_ACCELERATION*_time_rate+_motor_speed[servo];//#louiswarning : manque /1000. non ?
         throw new Motor_Exception(Motor_Exception::acceleration_saturation, "Error : acceleration superior to saturation",1);
-        return -MAX_MOTOR_ACCELERATION*_time_rate+_motor_speed[servo];
     }
-    return new_speed;
 }
 
-// Last update :
-// #Motors2
-float MaestroMotor::preCalcMotorSpeed(Eigen::Vector4f& command, SERVO_ID servo){
+
+
+// #louismodif : ici c'est square speed qu'on compute je crois
+float MaestroMotor::preCalcMotorSquareSpeed(Eigen::Vector4f& command, SERVO_ID servo){
+    // #louismodif : on compare aux ID des servos, qui à priori ne vaudront pas toujours 0,1,2,3
+    int eps1 = ((servo==SERVO_ID::servo_1_id||servo==SERVO_ID::servo_2_id) ? 0 : 1);
+    int eps2 = ((servo==SERVO_ID::servo_1_id||servo==SERVO_ID::servo_3_id) ? 0 : 1);
+    // #louiswarning : pas de dépendance pour le 4 ?
     
-    int eps1 = (((servo==1)||(servo==2))? 0 : 1);
-    int eps2 = (((servo==1)||(servo==3))? 0 : 1);
-    
+    // #louiscomment : attention convention en C++ : preprocesseurs en lettres majuscules
     return (command[0]/(4*thrust_factor)+(2*eps1-1)*command[eps2+2]/(2*thrust_factor*center_to_motor_distance)+(2*eps2-1)*command[3]/(4*drag_factor));
     
 }
 
 
-// Last update :
-// #Motors2
+
 void MaestroMotor::_update_motor_speed(Eigen::Vector4f& command){
     
+    // #louismodif : On compute SquareSpeed, on le check puis on l'envoie
     // Updating Servo Speed 1
-    float preCalcSpeed = preCalcMotorSpeed(command, servo_1_id);
-        preCalcSpeed=checkSpeed(command, preCalcSpeed);
-        preCalcSpeed=checkAcceleration(command, servo_1_id, preCalcSpeed);
-        _servo_out[0]=preCalcSpeed;
+    float preCalcSquareSpeed;
+    float preCalcSpeed;
     
-    // Updating Servo Speed 2
-        preCalcSpeed = preCalcMotorSpeed(command, servo_2_id);
-        preCalcSpeed=checkSpeed(command, preCalcSpeed);
-        preCalcSpeed=checkAcceleration(command, servo_2_id, preCalcSpeed);
-        _servo_out[1]=preCalcSpeed;
     
-    // Updating Servo Speed 3
-        preCalcSpeed = preCalcMotorSpeed(command, servo_3_id);
-        preCalcSpeed=checkSpeed(command, preCalcSpeed);
-        preCalcSpeed=checkAcceleration(command, servo_3_id, preCalcSpeed);
-        _servo_out[2]=preCalcSpeed;
-    
-    // Updating Servo Speed 4
-        preCalcSpeed = preCalcMotorSpeed(command, servo_4_id);
-        preCalcSpeed=checkSpeed(command, preCalcSpeed);
-        preCalcSpeed=checkAcceleration(command, servo_4_id, preCalcSpeed);
-        _servo_out[3]=preCalcSpeed;
+    //#louismodif : un peu plus joli comme même
+    for (int i=0; i<4 ; i++){
+        preCalcSquareSpeed = preCalcMotorSquareSpeed(command, _servo_id[i]);
+        checkSpeed(preCalcSquareSpeed);
+        preCalcSpeed = sqrtf(preCalcSquareSpeed);
+        checkAcceleration(_servo_id[i], preCalcSpeed);
+        // #louismodif : motor_speed, pas _servo_out
+        _motor_speed[i]=preCalcSpeed;
+    }
 }
 
 
-// Last update :
-// #Motors2
+
 void MaestroMotor::_update_servo_out(){
     
     // Updating Servo PWM Signal 1
@@ -155,7 +146,7 @@ void MaestroMotor::_update(Eigen::Vector4f& command){
 
 // Last update :
 // #Motors2
-int MaestroMotor::setPosition() throw(serial_exception){
+void MaestroMotor::setPosition() throw(Motor_Exception){
     
     if(_servo_port.isOpen()){
         
@@ -183,20 +174,20 @@ int MaestroMotor::setPosition() throw(serial_exception){
             number_of_updated_ports+=_servo_port.writeString(preCalcPWM4);
         
         if (number_of_updated_ports/4<1) {
-            throw Motor_Exception();
+            throw Motor_Exception(Motor_Exception::other,"Couldn't write on ALL ports",2);
         }
-            return number_of_updated_ports/4;
-
-    }
-    
-    else{
-        throw new serial_exception(1,"Failed to open Motor port",0);
-        return 0;
     }
 }
 
 
 
+
+/*
+ run(){
+    _update();
+    setPosition();
+ }
+ */
 
 
 
