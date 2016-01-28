@@ -27,16 +27,14 @@
 #include "Config.hpp"
 #include "/usr/local/include/Dense"
 #include <string>
-#include "navi_State.hpp"
 
 
 
 
-// TODO : calculate from command
-//      : safety checks on motors
-//      : write on port
-//      : STOP ALL (forever)
+// TODO :
+//      : add security for launch and 
 //      : define SERVO_CALIB (first input given to the ports to show motors is started + calib ?)
+//
 // COMMENT : at the moment, checkSpeed returns the speed (saturated if necessary)
 //         : declaration of #define SERVO_PORT is now in Config.hpp
 
@@ -65,6 +63,16 @@ public:
      * \param uint8_t time_rate : Time rate of the thread
      */
     MaestroMotor(uint8_t);
+    
+    
+    
+    /**
+     * \brief Destructor
+     *
+     * Destructor (end mutex, close port)
+     *
+     */
+    ~MaestroMotor();
     
     
     
@@ -145,10 +153,28 @@ public:
      *
      * Transform _servo_out to string and write on port
      *
-     * \return 1 if succeeded, 0 if not then throw serial_exception
+     * \return
      */
     void setPosition() throw(Motor_Exception);
     
+    
+    /**
+     * \brief Set all motors speed to zero
+     *
+     * Called for shutdown, put all the motors' speed down to zero
+     *
+     * \return
+     */
+    void setPositionToZero();
+    
+    
+    
+    
+    
+    /*----------------------------------------------------------------------------------------------------*/
+    /*-----------------------------------------  THREAD METHODS  -----------------------------------------*/
+    /*----------------------------------------------------------------------------------------------------*/
+
     
     /**
      * \brief Run the motors w/ checks
@@ -157,21 +183,39 @@ public:
      *
      * \return 
      */
-    void run() throw(Motor_Exception);
+    void* run();
+    
+    
+    /**
+     * \brief Start for thread methods
+     *
+     * This is the start method for the MaestroMotor thread 
+     *
+     * \return
+     */
+    void start();
+    
+    
+    
+    
     
 
 private:
     
     Serial _servo_port; //defined from CONFIG
     
-    SERVO_ID _servo_id[4]; //
-    
     Eigen::Vector4f _motor_speed; //motor speeds given in rd.s
 
+    SERVO_ID _servo_id[4];
     uint16_t _servo_out[4]; //PWM signals sent to ESC given in microseconds
-    
     uint8_t _time_rate; //time rate
-
+    
+    
+    bool _launch;
+    bool _shutdown;
+    
+    pthread_mutex_t _mutex_shutdown;
+    pthread_mutex_t _mutex_launch;
     
     
 };
