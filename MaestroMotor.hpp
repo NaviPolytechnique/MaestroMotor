@@ -27,18 +27,13 @@
 #include "Config.hpp"
 #include "/usr/local/include/Dense"
 #include <string>
+#include "Thread/Runnable.h"
+#include <pthread.h>
+#include "Thread/Thread.h"
 
 
 
-
-// TODO :
-//      : add security for launch and 
-//      : define SERVO_CALIB (first input given to the ports to show motors is started + calib ?)
-//
-// COMMENT : at the moment, checkSpeed returns the speed (saturated if necessary)
-//         : declaration of #define SERVO_PORT is now in Config.hpp
-
-class MaestroMotor {
+class MaestroMotor : public Runnable {
     
     
     /**
@@ -46,7 +41,7 @@ class MaestroMotor {
      * \brief Enumerates the 4 servo to ease control
      */
     enum SERVO_ID{
-        servo_1_id=0,  // TODO : assign value given connection of the library
+        servo_1_id=0,  
         servo_2_id=1,
         servo_3_id=2,
         servo_4_id=3
@@ -104,7 +99,7 @@ public:
      * \param Eigen::Vector4f : Commands from Autopilot, SERVO_ID of which we check the acceleration, float computed new motor speed
      */
     // COMMENT : SERVO_ID needed to compute acceleration from previous speed in _servo_out
-    void checkAcceleration(SERVO_ID, float&) throw(Motor_Exception);
+    void checkAcceleration(int, float&) throw(Motor_Exception);
 
     
     /**

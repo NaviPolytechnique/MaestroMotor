@@ -71,13 +71,15 @@
 // Last update : #Motors2
 #define MAX_MOTOR_SPEED 368.44 // given in rd/s
 #define MAX_MOTOR_ACCELERATION 7369. // given in rd/s^2
+#define SERVO_MAX_REAL 1136.
 
 // Servo port to control motors via ESC
 #define SERVO_PORT "/dev/servoblaster"
 
 // Times, in microseconds, to control PWM signals
 #define SERVO_VAL_MIN 1000.
-#define SERVO_VAL_MAX 2000.
+#define SERVO_VAL_MAX 2500.
+#define SERVO_INIT_PULSE 1000.
 
 
 

@@ -7,9 +7,19 @@
 //
 
 #include <iostream>
+#include "MaestroMotor.hpp"
+
+
 
 int main(int argc, const char * argv[]) {
-    // insert code here...
-    std::cout << "Hello, World!\n";
-    return 0;
+    
+    
+    MaestroMotor* maestro = new MaestroMotor(100);
+
+    maestro->start();
+    
+    usleep(10000000);
+    
+    
+    
 }
