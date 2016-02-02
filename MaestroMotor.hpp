@@ -164,6 +164,46 @@ public:
     
     
     
+    /** 
+     * \brief Launch the MaestroMotor run() method 
+     *
+     * Called when initiated for the motor control to begin
+     * 
+     */
+    void launch();
+    
+    
+    
+    /**
+     * \brief Returns _launch
+     *
+     * Threadsafe implementation of getLaunch
+     *
+     * \return bool _launch
+     */
+    bool getLaunch();
+    
+    
+    
+    /**
+     * \brief Switches the _shutdown bool
+     *
+     * Called when emergency situation is detected
+     *
+     */
+    void shutdown();
+    
+    
+    
+    /**
+     * \brief Returns _shutdown
+     *
+     * Threadsafe implementation of getShutdown
+     *
+     * \return bool _shutdown
+     */
+    bool getShutdown();
+    
     
     
     /*----------------------------------------------------------------------------------------------------*/

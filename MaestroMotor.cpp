@@ -125,22 +125,22 @@ void MaestroMotor::_update_motor_speed(Eigen::Vector4f& command){
 }
 
 
-
 void MaestroMotor::_update_servo_out() throw(Motor_Exception){
     
     float preCalcPWM;
-
+    
     for(int i=0;i<4;i++){
         
         preCalcPWM=SERVO_VAL_MAX-((SERVO_MAX_REAL-_motor_speed[i])/SERVO_MAX_REAL)*(SERVO_VAL_MAX-SERVO_VAL_MIN);
         
         if(preCalcPWM<SERVO_VAL_MIN||preCalcPWM>SERVO_VAL_MAX){
-            throw new Motor_Exception(Motor_Exception::other,"Invalid PWM instruction",i);
+            throw new Motor_Exception(Motor_Exception::other,"Invalid PWM instruction",2);
         }
         
         _servo_out[i] = preCalcPWM;
     }
 }
+
 
 
 void MaestroMotor::_update(Eigen::Vector4f& command){
@@ -193,6 +193,8 @@ void MaestroMotor::setPositionToZero(){
 //TODO : connect it w/ Drone class
 void* MaestroMotor::run() {
     
+    // For test purposes
+    /*
     for (int i=0; i<4; i++){
         _servo_out[i] = 1800;
     }
@@ -200,37 +202,38 @@ void* MaestroMotor::run() {
     usleep(2000000);
     
     setPositionToZero();
+    */
     
-    /*
+    
     Eigen::Vector4f command;
     
-    while ((_launch)){
+    while (!getLaunch()){
         sleep(1);
     }
     
     
     while (true) {
-        // TODO : get the command from the drone when there is a new one
-        command = drone->getCommand();
+
+        command = drone->getCommand(); // must be blocking until new command arrives
         try {
             _update(command);
             setPosition();
         }
         catch (const Motor_Exception& e){
-            // TODO
+            // TODO : GREG
         }
         
-        if (_shutdown) break;
+        if (getShutdown()) break;
+        
         usleep(1000*_time_rate);
     }
     
     setPositionToZero();
-     */
     
-    while (true){
-        
-    }
+    // + launch message : "Shutdown was called and MaestroMotor has now returned"
     
+    
+
     
  }
 
@@ -238,6 +241,40 @@ void* MaestroMotor::run() {
 void MaestroMotor::start(){
     Thread* th = new Thread(std::auto_ptr<Runnable>(this),false,Thread::FIFO,2);
     th->start();
+}
+
+
+void MaestroMotor::launch(){
+    pthread_mutex_lock(&_mutex_launch);
+    _launch = true;
+    pthread_mutex_unlock(&_mutex_launch);
+}
+
+
+
+bool MaestroMotor::getLaunch(){
+    bool launch;
+    pthread_mutex_lock(&_mutex_launch);
+    launch = _launch;
+    pthread_mutex_unlock(&_mutex_launch);
+    return launch;
+}
+
+
+void MaestroMotor::shutdown(){
+    pthread_mutex_lock(&_mutex_shutdown);
+    _shutdown = true;
+    pthread_mutex_unlock(&_mutex_shutdown);
+}
+
+
+
+bool MaestroMotor::getShutdown(){
+    bool shutdown;
+    pthread_mutex_lock(&_mutex_shutdown);
+    shutdown = _shutdown;
+    pthread_mutex_unlock(&_mutex_shutdown);
+    return shutdown;
 }
 
 
