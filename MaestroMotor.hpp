@@ -130,7 +130,7 @@ public:
      *
      * \param
      */
-    void _update_servo_out();
+    void _update_servo_out() throw(Motor_Exception);
     
     
     /**

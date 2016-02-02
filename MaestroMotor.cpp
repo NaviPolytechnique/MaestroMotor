@@ -126,18 +126,20 @@ void MaestroMotor::_update_motor_speed(Eigen::Vector4f& command){
 
 
 
-void MaestroMotor::_update_servo_out(){
-    // Updating Servo PWM Signal 1
-    _servo_out[0] = SERVO_VAL_MAX-((SERVO_MAX_REAL-_motor_speed[0])/SERVO_MAX_REAL)*(SERVO_VAL_MAX-SERVO_VAL_MIN);
+void MaestroMotor::_update_servo_out() throw(Motor_Exception){
     
-    // Updating Servo PWM Signal 2
-    _servo_out[1] = SERVO_VAL_MAX-((SERVO_MAX_REAL-_motor_speed[1])/SERVO_MAX_REAL)*(SERVO_VAL_MAX-SERVO_VAL_MIN);
-    
-    // Updating Servo PWM Signal 3
-    _servo_out[2] = SERVO_VAL_MAX-((SERVO_MAX_REAL-_motor_speed[2])/SERVO_MAX_REAL)*(SERVO_VAL_MAX-SERVO_VAL_MIN);
-    
-    // Updating Servo PWM Signal 4
-    _servo_out[3] = SERVO_VAL_MAX-((SERVO_MAX_REAL-_motor_speed[3])/SERVO_MAX_REAL)*(SERVO_VAL_MAX-SERVO_VAL_MIN);
+    float preCalcPWM;
+
+    for(int i=0;i<4;i++){
+        
+        preCalcPWM=SERVO_VAL_MAX-((SERVO_MAX_REAL-_motor_speed[i])/SERVO_MAX_REAL)*(SERVO_VAL_MAX-SERVO_VAL_MIN);
+        
+        if(preCalcPWM<SERVO_VAL_MIN||preCalcPWM>SERVO_VAL_MAX){
+            throw new Motor_Exception(Motor_Exception::other,"Invalid PWM instruction",i);
+        }
+        
+        _servo_out[i] = preCalcPWM;
+    }
 }
 
 
